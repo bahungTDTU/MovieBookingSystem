@@ -59,16 +59,17 @@ The system is divided into 7 independent services communicating via REST APIs.
 
 -   Docker Desktop installed and running.
 
-### Step 1: Configure Email (Crucial)
+### Step 1: Configure Environment Variables (Crucial)
 
-Open `docker-compose.yml`, find `otp_service`, and update your Gmail credentials to enable email sending. **Note**: Use a [Google App Password](https://support.google.com/accounts/answer/185833), not your regular login password.
+Copy the example environment file and fill in your credentials:
 
-```yaml
-    otp_service:
-        environment:
-            SMTP_EMAIL: "your_email@gmail.com"
-            SMTP_PASSWORD: "your_16_digit_app_password"
+```bash
+cp .env.example .env
 ```
+
+Edit `.env` and update:
+- `SMTP_EMAIL` and `SMTP_PASSWORD` with your Gmail credentials. **Note**: Use a [Google App Password](https://support.google.com/accounts/answer/185833), not your regular login password.
+- Database credentials if needed (defaults are provided).
 
 ### Step 2: Start the System
 

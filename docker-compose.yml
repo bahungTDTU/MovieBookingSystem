@@ -8,17 +8,17 @@ services:
     restart: always
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: movie_booking_db
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "3306:3306"
     volumes:
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "user", "-ppassword"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "-p${MYSQL_PASSWORD}"]
       interval: 10s       
       timeout: 5s        
       retries: 10         
@@ -45,7 +45,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: mysql+pymysql://user:password@db:3306/movie_booking_db?charset=utf8mb4
+      DATABASE_URL: ${DATABASE_URL}
 
   # 4. OTP Service
   otp_service:
@@ -57,9 +57,9 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: mysql+pymysql://user:password@db:3306/movie_booking_db?charset=utf8mb4
-      SMTP_EMAIL: "bahungacezero@gmail.com"
-      SMTP_PASSWORD: "blvu uwqz awip nton"
+      DATABASE_URL: ${DATABASE_URL}
+      SMTP_EMAIL: ${SMTP_EMAIL}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
 
   # 5. Identity Service
   identity_service:
@@ -73,7 +73,7 @@ services:
       otp_service:
         condition: service_started
     environment:
-      DATABASE_URL: mysql+pymysql://user:password@db:3306/movie_booking_db?charset=utf8mb4
+      DATABASE_URL: ${DATABASE_URL}
 
   # 6. Booking Service
   booking_service:
@@ -87,7 +87,7 @@ services:
       identity_service:
         condition: service_started
     environment:
-      DATABASE_URL: mysql+pymysql://user:password@db:3306/movie_booking_db?charset=utf8mb4
+      DATABASE_URL: ${DATABASE_URL}
 
   # 7. Payment Service
   payment_service:
@@ -101,7 +101,7 @@ services:
       booking_service:
         condition: service_started
     environment:
-      DATABASE_URL: mysql+pymysql://user:password@db:3306/movie_booking_db?charset=utf8mb4
+      DATABASE_URL: ${DATABASE_URL}
 
   # 8. Frontend
   frontend:
@@ -123,7 +123,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: mysql+pymysql://user:password@db:3306/movie_booking_db?charset=utf8mb4
+      DATABASE_URL: ${DATABASE_URL}
 
   # 10. Scheduler Service
   scheduler_service:
@@ -133,7 +133,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: mysql+pymysql://user:password@db:3306/movie_booking_db?charset=utf8mb4
+      DATABASE_URL: ${DATABASE_URL}
 
   # 11. Management Service
   management_service:
@@ -145,7 +145,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: mysql+pymysql://user:password@db:3306/movie_booking_db?charset=utf8mb4
+      DATABASE_URL: ${DATABASE_URL}
 
 volumes:
   mysql_data:
