@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Xác thực OTP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: var(--bg-main);
+        }
+        .auth-container { width: 100%; max-width: 400px; padding: 20px; }
+        .otp-input {
+            letter-spacing: 10px;
+            text-align: center;
+            font-size: 24px !important;
+            font-weight: bold;
+        }
+        .resend-link {
+            color: var(--accent);
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .resend-link.disabled {
+            color: #666;
+            cursor: not-allowed;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <div class="auth-box" style="text-align: center;">
+            <div style="font-size: 40px; margin-bottom: 10px;">🔐</div>
+            <h2 style="margin: 0 0 10px;">Xác Thực Tài Khoản</h2>
+            <p style="color: var(--text-sub); font-size: 14px; margin-bottom: 30px;">
+                Nhập mã OTP 6 số đã gửi tới: <br>
+                <b id="display-email" style="color: white;">...</b>
+            </p>
+            
+            <div class="form-group">
+                <input type="text" id="verify-email" hidden>
+                <input type="text" id="verify-code" class="otp-input" placeholder="XXXXXX" maxlength="6">
+            </div>
+
+            <button class="btn" style="width: 100%; margin-bottom: 20px;" onclick="verifyOTP()">XÁC NHẬN</button>
+            
+            <p style="font-size: 14px; color: var(--text-sub);">
+                Chưa nhận được mã? 
+                <span id="resend-btn" class="resend-link disabled" onclick="resendOTP()">Gửi lại sau (60s)</span>
+            </p>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const email = params.get("email") || "";
+        document.getElementById("verify-email").value = email;
+        document.getElementById("display-email").innerText = email;
+        
+        startResendTimer(); 
+    </script>
+</body>
+</html>

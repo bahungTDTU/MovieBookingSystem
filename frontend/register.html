@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng ký - CineWorld</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: url('https://image.tmdb.org/t/p/original/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg') no-repeat center center/cover;
+        }
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: -1;
+        }
+        .auth-container { width: 100%; max-width: 450px; padding: 20px; }
+        .brand-logo { text-align: center; font-size: 32px; font-weight: 900; color: var(--accent); margin-bottom: 20px; }
+        .form-link { text-align: center; margin-top: 20px; font-size: 14px; color: var(--text-sub); }
+        .form-link a { color: var(--accent); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <div class="brand-logo">CINE<span style="color:white">WORLD</span>.</div>
+        
+        <div class="auth-box">
+            <h2 style="text-align: center; margin-top: 0; margin-bottom: 25px;">Tạo Tài Khoản</h2>
+            
+            <div class="form-group">
+                <label style="font-size: 12px; color: var(--text-sub); margin-bottom: 5px; display: block;">HỌ TÊN</label>
+                <input type="text" id="reg-name" placeholder="Nguyễn Văn A">
+            </div>
+
+            <div class="form-group">
+                <label style="font-size: 12px; color: var(--text-sub); margin-bottom: 5px; display: block;">EMAIL</label>
+                <input type="text" id="reg-email" placeholder="name@example.com">
+            </div>
+            
+            <div class="form-group">
+                <label style="font-size: 12px; color: var(--text-sub); margin-bottom: 5px; display: block;">MẬT KHẨU</label>
+                <input type="password" id="reg-password" placeholder="••••••••">
+            </div>
+
+            <div class="form-group">
+                <label style="font-size: 12px; color: var(--text-sub); margin-bottom: 5px; display: block;">XÁC NHẬN MẬT KHẨU</label>
+                <input type="password" id="reg-confirm-password" placeholder="••••••••">
+            </div>
+
+            <button class="btn" style="width: 100%; margin-top: 10px;" onclick="register()">ĐĂNG KÝ</button>
+            
+            <div class="form-link">
+                Đã có tài khoản? <a href="login.html">Đăng nhập</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+version: '3.8'
+
+services:
+  # 1. Database MySQL
+  db:
+    image: mysql:8.0
+    container_name: movie_mysql_container
+    restart: always
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: movie_booking_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "user", "-ppassword"]
+      interval: 10s       
+      timeout: 5s        
+      retries: 10         
+      start_period: 30s  
+
+  # 2. Adminer (Giao diện xem DB)
+  adminer:
+    image: adminer
+    container_name: movie_adminer
+    restart: always
+    ports:
+      - "8888:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # 3. Catalog Service
+  catalog_service:
+    build: ./services/catalog
+    container_name: movie_catalog_service
+    ports:
+      - "8001:8001"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: mysql+pymysql://user:password@db:3306/movie_booking_db?charset=utf8mb4
+
+  # 4. OTP Service
+  otp_service:
+    build: ./services/otp
+    container_name: movie_otp_service
+    ports:
+      - "8002:8002"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: mysql+pymysql://user:password@db:3306/movie_booking_db?charset=utf8mb4
+      SMTP_EMAIL: "bahungacezero@gmail.com"
+      SMTP_PASSWORD: "blvu uwqz awip nton"
+
+  # 5. Identity Service
+  identity_service:
+    build: ./services/identity
+    container_name: movie_identity_service
+    ports:
+      - "8003:8003"
+    depends_on:
+      db:
+        condition: service_healthy
+      otp_service:
+        condition: service_started
+    environment:
+      DATABASE_URL: mysql+pymysql://user:password@db:3306/movie_booking_db?charset=utf8mb4
+
+  # 6. Booking Service
+  booking_service:
+    build: ./services/booking
+    container_name: movie_booking_service
+    ports:
+      - "8004:8004"
+    depends_on:
+      db:
+        condition: service_healthy
+      identity_service:
+        condition: service_started
+    environment:
+      DATABASE_URL: mysql+pymysql://user:password@db:3306/movie_booking_db?charset=utf8mb4
+
+  # 7. Payment Service
+  payment_service:
+    build: ./services/payment
+    container_name: movie_payment_service
+    ports:
+      - "8005:8005"
+    depends_on:
+      db:
+        condition: service_healthy
+      booking_service:
+        condition: service_started
+    environment:
+      DATABASE_URL: mysql+pymysql://user:password@db:3306/movie_booking_db?charset=utf8mb4
+
+  # 8. Frontend
+  frontend:
+    build: ./frontend
+    container_name: movie_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - catalog_service
+      - identity_service
+
+  # 9. Redemption Service
+  redemption_service:
+    build: ./services/redemption
+    container_name: movie_redemption_service
+    ports:
+      - "8006:8006"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: mysql+pymysql://user:password@db:3306/movie_booking_db?charset=utf8mb4
+
+  # 10. Scheduler Service
+  scheduler_service:
+    build: ./services/scheduler
+    container_name: movie_scheduler_service
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: mysql+pymysql://user:password@db:3306/movie_booking_db?charset=utf8mb4
+
+  # 11. Management Service
+  management_service:
+    build: ./services/management
+    container_name: movie_management_service
+    ports:
+      - "8007:8007"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: mysql+pymysql://user:password@db:3306/movie_booking_db?charset=utf8mb4
+
+volumes:
+  mysql_data:

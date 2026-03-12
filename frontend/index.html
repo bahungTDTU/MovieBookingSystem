@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineWorld - Đặt vé xem phim</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="container nav-content">
+            <a href="index.html" class="logo">CINE<span style="color:white">WORLD</span>.</a>
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="Tìm phim...">
+            </div>
+            <div id="user-info">
+                <a href="login.html" class="btn-outline" style="padding: 8px 20px; border-radius: 20px; text-decoration:none; margin-right: 10px;">Đăng nhập</a>
+                <a href="register.html" class="btn" style="padding: 8px 20px; border-radius: 20px;">Đăng ký</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero" id="hero-section">
+        <div class="hero-overlay"></div>
+        <div class="container hero-content">
+            <span class="hero-tag">ĐANG HOT</span>
+            <span class="hero-tag" style="background:#fff; color:#000">IMAX</span>
+            
+            <h1 class="hero-title" id="hero-title">Đang tải phim hot...</h1>
+            <p class="hero-meta" id="hero-meta">...</p>
+            <p style="color: #ddd; margin-bottom: 20px; max-width: 500px;" id="hero-desc">
+            </p>
+            
+            <a href="#" class="btn" id="hero-btn">ĐẶT VÉ NGAY</a>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="section-title">
+            <span>PHIM ĐANG CHIẾU</span>
+            <div class="tabs">
+                <button class="active">Đang chiếu</button>
+                <button>Sắp chiếu</button>
+            </div>
+        </div>
+
+        <div class="movie-grid" id="movie-list">
+            <div style="color: #666; text-align: center; grid-column: span 4;">Đang tải danh sách phim...</div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
