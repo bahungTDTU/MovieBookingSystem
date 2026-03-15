@@ -1,0 +1,19 @@
+[Unit]
+Description=CineWorld Identity Service
+After=network.target mysql.service cineworld-otp.service
+Wants=mysql.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/cineworld/services/identity
+EnvironmentFile=/opt/cineworld/config/.env
+ExecStart=/opt/cineworld/services/identity/venv/bin/uvicorn main:app --host 127.0.0.1 --port 8003
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=cineworld-identity
+
+[Install]
+WantedBy=multi-user.target
