@@ -1,10 +1,12 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 import models, utils
 from database import engine, get_db
 import httpx
 from fastapi.middleware.cors import CORSMiddleware
+import os, uuid, shutil
 
 app = FastAPI(title="Identity Service")
 
@@ -19,6 +21,10 @@ app.add_middleware(
 models.Base.metadata.create_all(bind=engine)
 
 OTP_SERVICE_URL = "http://otp_service:8002"
+UPLOAD_DIR = "/app/uploads/avatars"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 
 # --- SCHEMAS ---
 class UserRegister(BaseModel):
@@ -43,6 +49,10 @@ class ForgotPasswordRequest(BaseModel):
 class ResetPasswordRequest(BaseModel):
     email: str
     otp_code: str
+    new_password: str
+
+class ChangePasswordRequest(BaseModel):
+    old_password: str
     new_password: str
 
 # --- API ENDPOINTS ---
@@ -158,4 +168,60 @@ def get_user_info(user_id: int, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return {"user_id": user.user_id, "email": user.email, "full_name": user.full_name}
+    return {
+        "user_id": user.user_id,
+        "email": user.email,
+        "full_name": user.full_name,
+        "profile_picture": user.profile_picture
+    }
+
+@app.post("/users/{user_id}/change-password")
+def change_password(user_id: int, req: ChangePasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.user_id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if not utils.verify_password(req.old_password, user.password_hash):
+        raise HTTPException(status_code=400, detail="Mật khẩu cũ không đúng")
+    user.password_hash = utils.get_password_hash(req.new_password)
+    db.commit()
+    return {"message": "Đổi mật khẩu thành công"}
+
+@app.post("/users/{user_id}/upload-avatar")
+async def upload_avatar(user_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.user_id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    ext = os.path.splitext(file.filename)[1].lower()
+    if ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(status_code=400, detail="Chỉ chấp nhận file ảnh (jpg, png, gif, webp)")
+
+    contents = await file.read()
+    if len(contents) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="File quá lớn (tối đa 5MB)")
+
+    # Remove old avatar if exists
+    if user.profile_picture:
+        old_path = os.path.join(UPLOAD_DIR, user.profile_picture)
+        if os.path.exists(old_path):
+            os.remove(old_path)
+
+    filename = f"{user_id}_{uuid.uuid4().hex[:8]}{ext}"
+    filepath = os.path.join(UPLOAD_DIR, filename)
+    with open(filepath, "wb") as f:
+        f.write(contents)
+
+    user.profile_picture = filename
+    db.commit()
+    return {"message": "Upload thành công", "profile_picture": filename}
+
+@app.get("/uploads/avatars/{filename}")
+async def get_avatar(filename: str):
+    # Prevent path traversal
+    safe_name = os.path.basename(filename)
+    if safe_name != filename or ".." in filename:
+        raise HTTPException(status_code=400, detail="Invalid filename")
+    filepath = os.path.join(UPLOAD_DIR, safe_name)
+    if not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail="File not found")
+    return FileResponse(filepath)

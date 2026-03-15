@@ -87,7 +87,8 @@ CREATE TABLE users (
     full_name VARCHAR(100) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     role ENUM('MEMBER', 'ADMIN', 'MANAGER', 'TICKET_CHECKER') DEFAULT 'MEMBER',
-    is_verified BOOLEAN DEFAULT FALSE
+    is_verified BOOLEAN DEFAULT FALSE,
+    profile_picture VARCHAR(500) DEFAULT NULL
 );
 
 CREATE TABLE otps (

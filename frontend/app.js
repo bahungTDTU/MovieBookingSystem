@@ -49,6 +49,9 @@ if (token && document.getElementById("user-info")) {
             <a href="history.html" class="btn" style="display: inline-flex; align-items: center; gap: 5px; background: #444; border: 1px solid #666; padding: 8px 12px; font-size: 14px;">
                 <i class="fas fa-history"></i> Vé của tôi
             </a>
+            <a href="profile.html" class="btn" style="display: inline-flex; align-items: center; gap: 5px; background: #444; border: 1px solid #666; padding: 8px 12px; font-size: 14px;">
+                <i class="fas fa-user-circle"></i> Hồ sơ
+            </a>
             <button class="btn" onclick="logout()" style="display: inline-flex; align-items: center; gap: 5px; background: #d32f2f; border: none; padding: 8px 12px; font-size: 14px;">
                 <i class="fas fa-sign-out-alt"></i> Đăng xuất
             </button>
@@ -899,4 +902,134 @@ async function cancelBookingFromHistory(id) {
         }
         else alert("Lỗi: " + data.detail);
     } catch (e) { alert("Lỗi kết nối"); }
+}
+
+// ============================================================
+// 7. PROFILE LOGIC
+// ============================================================
+
+function getTokenPayload() {
+    if (!token) return null;
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+    } catch (e) { return null; }
+}
+
+async function loadProfile() {
+    if (!token) { window.location.href = "login.html"; return; }
+    if (isTokenExpired(token)) { logout(); return; }
+
+    const payload = getTokenPayload();
+    if (!payload || !payload.id) { logout(); return; }
+
+    try {
+        const res = await fetch(`${API.IDENTITY}/users/${payload.id}`);
+        if (!res.ok) throw new Error("Failed to load profile");
+        const user = await res.json();
+
+        document.getElementById("profile-name").textContent = user.full_name;
+        document.getElementById("profile-email").textContent = user.email;
+        document.getElementById("profile-fullname").textContent = user.full_name;
+
+        if (payload.role) {
+            document.getElementById("profile-role").textContent = payload.role;
+        }
+
+        const avatarEl = document.getElementById("profile-avatar");
+        if (user.profile_picture) {
+            avatarEl.src = `${API.IDENTITY}/uploads/avatars/${user.profile_picture}`;
+        } else {
+            const initials = user.full_name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+            avatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=FFC107&color=000&size=120`;
+        }
+        avatarEl.onerror = function() {
+            const initials = user.full_name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+            this.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=FFC107&color=000&size=120`;
+        };
+    } catch (e) {
+        console.error("Load profile error:", e);
+    }
+}
+
+async function uploadAvatar(input) {
+    if (!input.files || !input.files[0]) return;
+
+    const file = input.files[0];
+    if (file.size > 5 * 1024 * 1024) {
+        alert("File quá lớn! Tối đa 5MB.");
+        return;
+    }
+
+    const payload = getTokenPayload();
+    if (!payload || !payload.id) { logout(); return; }
+
+    const progressEl = document.getElementById("upload-progress");
+    progressEl.style.display = "block";
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+        const res = await fetch(`${API.IDENTITY}/users/${payload.id}/upload-avatar`, {
+            method: "POST",
+            body: formData
+        });
+        const data = await res.json();
+        if (res.ok) {
+            document.getElementById("profile-avatar").src = `${API.IDENTITY}/uploads/avatars/${data.profile_picture}`;
+        } else {
+            alert("Lỗi: " + data.detail);
+        }
+    } catch (e) {
+        alert("Lỗi kết nối khi upload ảnh");
+    } finally {
+        progressEl.style.display = "none";
+        input.value = "";
+    }
+}
+
+function openChangePasswordModal() {
+    document.getElementById("password-modal").classList.add("active");
+}
+
+function closeChangePasswordModal() {
+    document.getElementById("password-modal").classList.remove("active");
+    document.getElementById("old-password").value = "";
+    document.getElementById("new-password").value = "";
+    document.getElementById("confirm-new-password").value = "";
+}
+
+async function changePassword() {
+    const oldPass = document.getElementById("old-password").value;
+    const newPass = document.getElementById("new-password").value;
+    const confirmPass = document.getElementById("confirm-new-password").value;
+
+    if (!oldPass || !newPass || !confirmPass) return alert("Vui lòng điền đầy đủ thông tin!");
+    if (newPass !== confirmPass) return alert("Mật khẩu mới không khớp!");
+    if (newPass.length < 6) return alert("Mật khẩu mới phải có ít nhất 6 ký tự!");
+
+    const payload = getTokenPayload();
+    if (!payload || !payload.id) { logout(); return; }
+
+    try {
+        const res = await fetch(`${API.IDENTITY}/users/${payload.id}/change-password`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ old_password: oldPass, new_password: newPass })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            alert("Đổi mật khẩu thành công! Vui lòng đăng nhập lại.");
+            logout();
+        } else {
+            alert("Lỗi: " + data.detail);
+        }
+    } catch (e) {
+        alert("Lỗi kết nối");
+    }
 }

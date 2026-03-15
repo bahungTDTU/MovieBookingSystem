@@ -22,6 +22,7 @@ CineWorld is a complete solution for cinema chains, consisting of:
 -   **E-Ticket**: Receive electronic tickets via Email with a scannable Barcode.
 -   **My Tickets**: View booking history with color-coded statuses.
 -   **Refund**: Self-service cancellation and refund for unused tickets.
+-   **User Profile**: Personal profile page with avatar upload, password change, and booking history access.
 
 ### 🛠 For Admins
 
@@ -42,7 +43,7 @@ The system is divided into 7 independent services communicating via REST APIs.
 
 | Service Name      | Port | Main Responsibility                                       |
 | ----------------- | ---- | --------------------------------------------------------- |
-| Identity Service  | 8003 | Register, Login (JWT), OTP Verification, Password Reset.  |
+| Identity Service  | 8003 | Register, Login (JWT), OTP Verification, Password Reset, User Profile & Avatar Upload.  |
 | Catalog Service   | 8001 | Manage Movies, Cinemas, Screens, Showtimes, Concessions.  |
 | Booking Service   | 8004 | Handle bookings, seat holding, pricing, order management. |
 |                   |      | Send Emails (SMTP)                                        |
@@ -85,6 +86,7 @@ If the container is now run, just try again in a few minute.
 ### Step 3: Access the Application
 
 -   **Home Page (Customer)**: [http://localhost:3000](http://localhost:3000)
+-   **User Profile**: [http://localhost:3000/profile.html](http://localhost:3000/profile.html)
 -   **Admin Dashboard**: [http://localhost:3000/admin.html](http://localhost:3000/admin.html)
 -   **Staff Scanner**: [http://localhost:3000/scanner.html](http://localhost:3000/scanner.html)
 -   **Database Manager (Adminer)**: [http://localhost:8080](http://localhost:8080)
