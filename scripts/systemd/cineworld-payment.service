@@ -1,0 +1,19 @@
+[Unit]
+Description=CineWorld Payment Service
+After=network.target mysql.service cineworld-booking.service
+Wants=mysql.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/cineworld/services/payment
+EnvironmentFile=/opt/cineworld/config/.env
+ExecStart=/opt/cineworld/services/payment/venv/bin/uvicorn main:app --host 127.0.0.1 --port 8005
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=cineworld-payment
+
+[Install]
+WantedBy=multi-user.target
