@@ -10,3 +10,4 @@ class User(Base):
     password_hash = Column(String(255))
     role = Column(String(20), default="MEMBER")
     is_verified = Column(Boolean, default=False)
+    profile_picture = Column(String(500), nullable=True)
