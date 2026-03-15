@@ -34,6 +34,21 @@ function isTokenExpired(t) {
     } catch (e) { return true; }
 }
 
+function getUserEmailFromToken() {
+    if (!token) return "";
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        const payload = JSON.parse(jsonPayload);
+        return payload.email || payload.sub || "";
+    } catch (e) {
+        return "";
+    }
+}
+
 if (token && isTokenExpired(token)) {
     logout();
 }
@@ -663,7 +678,9 @@ async function bookAndPay() {
             screenTypeDisplay += ` (+${currentScreenTypeSurcharge.toLocaleString()}đ/vé)`;
         }
 
-        window.location.href = `payment.html?id=${data.booking_id}&total=${data.total_amount}&movie=${encodeURIComponent(movieTitle)}&seats=${niceSeatsStr}&snacks=${encodeURIComponent(snacksStr)}&cinema=${encodeURIComponent(selectedCinemaName)}&screen=${encodeURIComponent(currentScreenName)}&screenType=${encodeURIComponent(screenTypeDisplay)}`;
+        const selectedShowtime = realShowtimesData.find(st => st.showtime_id === selectedShowtimeId);
+        const startTime = selectedShowtime?.start_time || "";
+        window.location.href = `payment.html?id=${data.booking_id}&total=${data.total_amount}&movie=${encodeURIComponent(movieTitle)}&seats=${niceSeatsStr}&snacks=${encodeURIComponent(snacksStr)}&cinema=${encodeURIComponent(selectedCinemaName)}&screen=${encodeURIComponent(currentScreenName)}&screenType=${encodeURIComponent(screenTypeDisplay)}&showtimeId=${selectedShowtimeId}&startTime=${encodeURIComponent(startTime)}`;
     } catch (e) { alert("Lỗi đặt vé: " + e.message); }
 }
 
@@ -673,6 +690,63 @@ async function bookAndPay() {
 
 let currentBookingId = null;
 let currentAmount = 0; 
+
+async function sendTicketEmailForCurrentBooking() {
+    const p = new URLSearchParams(window.location.search);
+    const userEmail = getUserEmailFromToken();
+    if (!userEmail) {
+        console.warn("Không lấy được email người dùng từ token.");
+        return false;
+    }
+
+    let startTime = p.get("startTime") || "";
+    const showtimeId = p.get("showtimeId");
+    if (!startTime && showtimeId) {
+        try {
+            const showtimeRes = await fetch(`${API.CATALOG}/showtimes/${showtimeId}`);
+            if (showtimeRes.ok) {
+                const st = await showtimeRes.json();
+                startTime = st.start_time || "";
+            }
+        } catch (e) {
+            console.warn("Không tải được thông tin suất chiếu:", e);
+        }
+    }
+    if (!startTime) startTime = new Date().toLocaleString("vi-VN");
+
+    const seatsRaw = p.get("seats") || "";
+    const seats = seatsRaw.split(",").map(s => s.trim()).filter(Boolean);
+    const payload = {
+        email: userEmail,
+        booking_id: parseInt(currentBookingId),
+        ticket_code: `CW-${currentBookingId}`,
+        movie_title: p.get("movie") || "Unknown Movie",
+        cinema_name: p.get("cinema") || "Unknown Cinema",
+        screen_name: p.get("screen") || "Unknown Screen",
+        start_time: startTime,
+        seats: seats.length > 0 ? seats : ["N/A"],
+        concessions_text: p.get("snacks") || "Không có",
+        amount: parseInt(currentAmount) || 0,
+        qr_code: `CW-${currentBookingId}-${Date.now().toString().slice(-6)}`
+    };
+
+    try {
+        const res = await fetch(`${API.PAYMENT}/send-ticket`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        if (!res.ok) {
+            const errText = await res.text();
+            console.error("Gửi email vé thất bại:", errText);
+            return false;
+        }
+        return true;
+    } catch (e) {
+        console.error("Lỗi kết nối khi gửi email vé:", e);
+        return false;
+    }
+}
 
 if (document.getElementById("inv-id")) {
     loadPaymentPage();
@@ -765,7 +839,9 @@ async function processPaymentFinal() {
             const mockData = await mockRes.json();
             
             if (mockRes.ok) {
-                alert("💳 Thanh toán thẻ thành công! Vé đã được gửi về email.");
+                const sent = await sendTicketEmailForCurrentBooking();
+                if (sent) alert("💳 Thanh toán thẻ thành công! Vé đã được gửi về email.");
+                else alert("💳 Thanh toán thẻ thành công, nhưng gửi email vé thất bại. Vui lòng kiểm tra lại email hoặc liên hệ hỗ trợ.");
                 window.location.href = "index.html";
             } else {
                 alert("💳 Thanh toán thất bại: " + mockData.detail);
@@ -785,7 +861,9 @@ async function processPaymentFinal() {
         });
         const data = await res.json();
         if (res.ok) { 
-            alert("Thanh toán thành công! Vé đã được gửi về email."); 
+            const sent = await sendTicketEmailForCurrentBooking();
+            if (sent) alert("Thanh toán thành công! Vé đã được gửi về email.");
+            else alert("Thanh toán thành công, nhưng gửi email vé thất bại. Vui lòng kiểm tra lại email hoặc liên hệ hỗ trợ.");
             window.location.href = "index.html"; 
         }
         else alert("Thanh toán thất bại: " + data.detail);
