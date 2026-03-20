@@ -2,11 +2,11 @@
 // 1. CẤU HÌNH API & GLOBAL
 // ============================================================
 const API = {
-    CATALOG: "http://localhost:8001",
-    IDENTITY: "http://localhost:8003",
-    BOOKING: "http://localhost:8004",
-    PAYMENT: "http://localhost:8005",
-    REDEMPTION: "http://localhost:8006"
+    CATALOG: "/api/catalog",
+    IDENTITY: "/api/identity",
+    BOOKING: "/api/booking",
+    PAYMENT: "/api/payment",
+    REDEMPTION: "/api/redemption"
 };
 
 let token = sessionStorage.getItem("token") || localStorage.getItem("token");

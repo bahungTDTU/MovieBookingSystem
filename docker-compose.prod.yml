@@ -1,0 +1,226 @@
+version: '3.8'
+
+# =============================================================================
+# Phase 3 - Production Docker Compose (Pull from Docker Hub)
+# =============================================================================
+# This file pulls pre-built images from Docker Hub instead of building locally
+#
+# IMPORTANT: Replace "your-dockerhub-username" with your actual Docker Hub username
+#
+# Usage:
+#   1. Push images to Docker Hub from local machine
+#   2. Upload this file + .env + database/ to production server
+#   3. Update username in this file
+#   4. Run: docker-compose -f docker-compose.prod.yml up -d
+# =============================================================================
+
+services:
+  # =============================================================================
+  # Database Service
+  # =============================================================================
+  db:
+    image: mysql:8.0
+    container_name: movie_mysql_container
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cineworld_network
+
+  # =============================================================================
+  # Adminer - Database Management UI
+  # =============================================================================
+  adminer:
+    image: adminer:latest
+    container_name: movie_adminer
+    restart: always
+    ports:
+      - "8888:8080"
+    depends_on:
+      - db
+    networks:
+      - cineworld_network
+
+  # =============================================================================
+  # Microservices - PULL FROM DOCKER HUB
+  # =============================================================================
+
+  # Catalog Service
+  catalog_service:
+    image: your-dockerhub-username/cineworld-catalog:latest
+    container_name: movie_catalog_service
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8001:8001"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cineworld_network
+
+  # OTP Service
+  otp_service:
+    image: your-dockerhub-username/cineworld-otp:latest
+    container_name: movie_otp_service
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8002:8002"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cineworld_network
+
+  # Identity Service
+  identity_service:
+    image: your-dockerhub-username/cineworld-identity:latest
+    container_name: movie_identity_service
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8003:8003"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cineworld_network
+
+  # Booking Service
+  booking_service:
+    image: your-dockerhub-username/cineworld-booking:latest
+    container_name: movie_booking_service
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8004:8004"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cineworld_network
+
+  # Payment Service
+  payment_service:
+    image: your-dockerhub-username/cineworld-payment:latest
+    container_name: movie_payment_service
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8005:8005"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cineworld_network
+
+  # Redemption Service
+  redemption_service:
+    image: your-dockerhub-username/cineworld-redemption:latest
+    container_name: movie_redemption_service
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8006:8006"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cineworld_network
+
+  # Management Service
+  management_service:
+    image: your-dockerhub-username/cineworld-management:latest
+    container_name: movie_management_service
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8007:8007"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cineworld_network
+
+  # Scheduler Service (Background Job)
+  scheduler_service:
+    image: your-dockerhub-username/cineworld-scheduler:latest
+    container_name: movie_scheduler_service
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cineworld_network
+
+  # Frontend (Nginx)
+  frontend:
+    image: your-dockerhub-username/cineworld-frontend:latest
+    container_name: movie_frontend
+    restart: always
+    ports:
+      - "3000:80"
+    networks:
+      - cineworld_network
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  mysql_data:
+    driver: local
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  cineworld_network:
+    driver: bridge
+
+# =============================================================================
+# Notes:
+#
+# 1. Key Difference from Local docker-compose.yml:
+#    - Local: build: ./catalog_service
+#    - Production: image: username/cineworld-catalog:latest
+#
+# 2. All images must be pushed to Docker Hub first
+#
+# 3. This file PULLS pre-built images (Phase 3 requirement)
+#
+# 4. To update services:
+#    a. Build new images locally
+#    b. Tag and push to Docker Hub
+#    c. On server: docker-compose pull && docker-compose up -d
+#
+# 5. Environment variables loaded from .env file
+#
+# 6. restart: always ensures containers recover from failures
+#
+# 7. healthcheck ensures database is ready before services start
+#
+# 8. Named volumes persist data across container lifecycles
+# =============================================================================
