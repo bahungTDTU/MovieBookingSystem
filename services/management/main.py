@@ -24,7 +24,9 @@ app.add_middleware(
 models.Base.metadata.create_all(bind=engine)
 
 # --- SECURITY ---
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-this-in-production")
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("JWT_SECRET_KEY environment variable is required")
 ALGORITHM = "HS256"
 
 security = HTTPBearer()

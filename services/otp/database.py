@@ -1,10 +1,13 @@
+import os
 import time
 from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-DATABASE_URL = "mysql+pymysql://user:password@db:3306/movie_booking_db?charset=utf8mb4"
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable is required")
 
 def create_engine_with_retry(max_retries=10, delay=5):
     """
