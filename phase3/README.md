@@ -37,43 +37,20 @@ Named Volumes:
 
 ```
 phase3/
-├── README.md                                ← this file
-├── dockerfiles/
-│   ├── README.md
-│   ├── frontend/
-│   │   └── Dockerfile                       ← (1) Finalised frontend Dockerfile
-│   └── services/
-│       ├── catalog/Dockerfile               ← (1) Finalised service Dockerfiles
-│       ├── otp/Dockerfile
-│       ├── identity/Dockerfile
-│       ├── booking/Dockerfile
-│       ├── payment/Dockerfile
-│       ├── redemption/Dockerfile
-│       ├── management/Dockerfile
-│       └── scheduler/Dockerfile
-├── docker-compose/
-│   ├── docker-compose.prod.yml              ← (2) Production compose (volumes + networks)
-│   ├── .env.example                         ← (2) Environment variable template
-│   └── README.md
-├── screenshots/
-│   └── dockerhub/
-│       └── README.md                        ← (3) Docker Hub repo screenshot guide
-└── evidence/
-    ├── build-push-pull/
-    │   └── README.md                        ← (4) docker build/push/pull evidence guide
-    ├── docker-ps/
-    │   └── README.md                        ← (5) docker ps output guide
-    ├── volumes/
-    │   └── README.md                        ← (6) Persistent volume behaviour guide
-    ├── https-routing/
-    │   └── README.md                        ← (7) HTTPS routing verification guide
-    └── restart-behaviour/
-        └── README.md                        ← (8) Container/daemon/reboot restart guide
+├── README.md                          ← this file
+├── deploy-aws.ps1                     ← AWS deployment script (PowerShell)
+├── generate-ssl-cert.ps1              ← SSL certificate generation script
+├── docker-compose-nginx-proxy.yml     ← Docker Compose with Nginx proxy
+├── nginx-https-local.conf             ← Nginx config for local HTTPS
+├── nginx-production-docker.conf       ← Nginx config for production Docker
+└── screenshots/
+    └── dockerhub/
+        ├── README.md                  ← Docker Hub screenshot guide
+        └── CineWorld images on Docker Hub.png
 ```
 
-> **Note on screenshots and evidence:** Each subdirectory contains a README file describing
-> exactly which screenshots to capture. Place actual `.png` files alongside the README after
-> deployment.
+> **Note:** Dockerfiles are located in each service directory (e.g., `services/catalog/Dockerfile`).
+> The main `docker-compose.prod.yml` is at the project root level.
 
 ---
 
@@ -81,26 +58,27 @@ phase3/
 
 | # | Requirement | Artefact |
 |---|-------------|----------|
-| 1 | Finalized Dockerfile(s) | `dockerfiles/` |
-| 2 | docker-compose with volumes, networks, .env, prod config | `docker-compose/` |
+| 1 | Finalized Dockerfile(s) | `services/*/Dockerfile`, `frontend/Dockerfile` |
+| 2 | docker-compose with volumes, networks, .env, prod config | `docker-compose.prod.yml` (root) |
 | 3 | Docker Hub repository screenshots | `screenshots/dockerhub/` |
-| 4 | Evidence of docker build, push, pull | `evidence/build-push-pull/` |
-| 5 | docker ps outputs | `evidence/docker-ps/` |
-| 6 | Persistent volume behaviour evidence | `evidence/volumes/` |
-| 7 | HTTPS reverse proxy routing verification | `evidence/https-routing/` |
-| 8 | Container/daemon/reboot restart evidence | `evidence/restart-behaviour/` |
+| 4 | Nginx configuration for Docker | `nginx-production-docker.conf` |
+| 5 | AWS deployment script | `deploy-aws.ps1` |
+| 6 | SSL certificate generation | `generate-ssl-cert.ps1` |
+| 7 | Docker Compose with Nginx proxy | `docker-compose-nginx-proxy.yml` |
+| 8 | Local HTTPS Nginx config | `nginx-https-local.conf` |
 
 ---
 
 ## Quick Start (Production Server)
 
 ```bash
-# 1. Upload phase3/docker-compose/ to server
-scp -r phase3/docker-compose/ user@server:~/cineworld/
+# 1. Upload project files to server
+scp docker-compose.prod.yml user@server:~/cineworld/
+scp phase3/nginx-production-docker.conf user@server:~/cineworld/
 
 # 2. SSH into server and set up environment
 ssh user@server
-cd ~/cineworld/docker-compose
+cd ~/cineworld
 cp .env.example .env
 nano .env          # Fill in real values
 
@@ -117,12 +95,12 @@ curl https://tungtungtungtungsahur.site/api/catalog/movies
 
 ## Nginx Configuration
 
-The host Nginx config for Phase 3 is at `nginx-production-docker.conf` (project root level).
+The host Nginx config for Phase 3 is at `phase3/nginx-production-docker.conf`.
 It routes HTTPS traffic to Docker container ports (same port numbers as Phase 2 systemd services,
 so the Nginx config change is minimal).
 
 ```bash
-sudo cp nginx-production-docker.conf /etc/nginx/sites-available/cineworld
-sudo sed -i 's/tungtungtungtungsahur.site/tungtungtungtungsahur.site/g' /etc/nginx/sites-available/cineworld
+sudo cp phase3/nginx-production-docker.conf /etc/nginx/sites-available/cineworld
+sudo sed -i 's/tungtungtungtungsahur.site/YOUR_DOMAIN/g' /etc/nginx/sites-available/cineworld
 sudo nginx -t && sudo systemctl reload nginx
 ```
