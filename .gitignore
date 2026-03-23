@@ -39,3 +39,14 @@ logs/
 
 # Agent context
 agent.md
+
+# Phase README files
+phase1/automation-scripts/README.md
+phase1/CHECKLIST.md
+phase1/README.md
+phase2/configurations/README.md
+phase2/process-manager/README.md
+phase2/README.md
+phase3/docker-compose/README.md
+phase3/dockerfiles/README.md
+phase3/evidence/build-push-pull/README.md
