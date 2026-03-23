@@ -1,0 +1,19 @@
+[Unit]
+Description=CineWorld Management Service
+After=network.target mysql.service
+Wants=mysql.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/cineworld/services/management
+EnvironmentFile=/opt/cineworld/config/.env
+ExecStart=/opt/cineworld/services/management/venv/bin/uvicorn main:app --host 127.0.0.1 --port 8007
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=cineworld-management
+
+[Install]
+WantedBy=multi-user.target

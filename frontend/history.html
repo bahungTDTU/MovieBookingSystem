@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Lịch sử Đặt vé</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .page-title { margin-bottom: 30px; border-left: 5px solid var(--accent); padding-left: 15px; }
+        
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .ticket-card {
+            background: var(--bg-surface);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+            transition: 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .ticket-card:hover { border-color: var(--accent); transform: translateX(5px); }
+
+        .ticket-poster {
+            width: 100px;
+            height: 140px;
+            background: #000;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .ticket-info { flex: 1; }
+        .ticket-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .t-movie { font-size: 20px; font-weight: bold; color: white; margin: 0; }
+        .t-id { color: var(--text-sub); font-size: 14px; }
+        
+        .t-detail { color: var(--text-sub); font-size: 14px; margin-bottom: 5px; }
+        .t-detail b { color: #ddd; }
+
+        .ticket-status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .status-confirmed { background: rgba(46, 213, 115, 0.2); color: #2ed573; border: 1px solid #2ed573; }
+        .status-pending { background: rgba(255, 165, 2, 0.2); color: #ffa502; border: 1px solid #ffa502; }
+        .status-cancelled { background: rgba(255, 71, 87, 0.2); color: #ff4757; border: 1px solid #ff4757; }
+
+        .no-data { text-align: center; color: #666; margin-top: 50px; font-size: 18px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container nav-content">
+            <a href="index.html" class="logo">CINE<span style="color:white">WORLD</span>.</a>
+            <div id="user-info"></div>
+        </div>
+    </nav>
+
+    <div class="container" style="margin-top: 40px; margin-bottom: 50px;">
+        <h1 class="page-title">Vé Của Tôi</h1>
+        
+        <div id="history-container" class="history-list">
+            <div style="text-align:center; color:#999;">Đang tải dữ liệu...</div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        loadBookingHistory();
+    </script>
+</body>
+</html>

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineWorld - Staff Scanner</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-main: #121212; --bg-surface: #1E1E2E; --accent: #FFC107; --text-main: #FFFFFF; --success: #2ED573; --danger: #FF4757; --warning: #FFA502; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-main); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        
+        .scanner-box { background: var(--bg-surface); padding: 40px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; border: 1px solid #333; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        
+        h1 { color: var(--accent); margin-bottom: 5px; text-transform: uppercase; }
+        
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+        
+        input { width: 100%; padding: 15px; font-size: 18px; background: var(--bg-main); border: 1px solid #333; color: var(--text-main); border-radius: 10px; margin-bottom: 20px; outline: none; font-weight: bold; box-sizing: border-box; }
+        input:focus { border-color: var(--accent); }
+        
+        .btn { width: 100%; padding: 15px; background: var(--accent); color: #000; border: none; border-radius: 10px; font-size: 16px; font-weight: 900; cursor: pointer; text-transform: uppercase; margin-bottom: 10px; transition: 0.2s;}
+        .btn:hover { background: #FFD54F; }
+        
+        #btn-checkin { background: var(--success); color: white; display: none; }
+        #btn-print { background: #333; color: white; border: 1px solid #555; display: none; }
+        #btn-print:hover { background: #444; }
+        .btn-logout { background: #333; color: #fff; font-size: 12px; padding: 5px 10px; width: auto; position: absolute; top: 20px; right: 20px; }
+
+        #result-area { display: none; margin-top: 30px; border-top: 1px solid #333; padding-top: 20px; }
+        .status-badge { display: inline-block; padding: 8px 15px; border-radius: 50px; font-weight: bold; font-size: 14px; margin-bottom: 15px; }
+        .status-valid { background: rgba(46, 213, 115, 0.15); color: var(--success); border: 1px solid var(--success); }
+        .status-invalid { background: rgba(255, 71, 87, 0.15); color: var(--danger); border: 1px solid var(--danger); }
+        .status-used { background: rgba(255, 165, 2, 0.15); color: var(--warning); border: 1px solid var(--warning); }
+        .info-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; }
+        .info-label { color: #777; } .info-val { font-weight: bold; }
+
+        #login-ui { display: block; }
+        #scanner-ui { display: none; position: relative; }
+
+        #printable-container { display: none; }
+        @media print {
+            body * { visibility: hidden; }
+            #printable-container, #printable-container * { visibility: visible; }
+            #printable-container { display: block !important; position: absolute; left: 0; top: 0; width: 100%; }
+            .single-ticket { width: 300px; padding: 10px; font-family: 'Courier Prime', monospace; color: black; background: white; text-align: center; border: 1px dashed #000; margin-bottom: 20px; display: block !important; }
+            .page-break { page-break-after: always; }
+            .ticket-logo { font-size: 20px; font-weight: bold; border-bottom: 2px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
+            .ticket-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; text-align: left; }
+            .ticket-row span:last-child { font-weight: bold; text-align: right; }
+            .ticket-divider { border-top: 1px dashed #000; margin: 10px 0; }
+            .ticket-seat-large { font-size: 24px; font-weight: bold; margin: 5px 0; }
+            .ticket-footer { font-size: 10px; margin-top: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="login-ui" class="scanner-box">
+        <h1 style="color: var(--accent);">STAFF LOGIN</h1>
+        <p style="color: #777; font-size: 14px; margin-bottom: 30px;">Hệ thống dành riêng cho nhân viên</p>
+        
+        <input type="text" id="staff-email" placeholder="Email nhân viên">
+        <input type="password" id="staff-password" placeholder="Mật khẩu">
+        <button class="btn" onclick="staffLogin()">ĐĂNG NHẬP</button>
+    </div>
+
+    <div id="scanner-ui" class="scanner-box">
+        <button class="btn btn-logout" onclick="staffLogout()">Đăng xuất</button>
+        <h1>Staff Scanner</h1>
+        <p>Hệ thống soát vé CineWorld</p>
+        
+        <input type="number" id="booking-id" placeholder="Nhập ID vé" style="font-size: 24px; text-align: center;">
+        <button class="btn" onclick="checkTicket()">KIỂM TRA VÉ</button>
+
+        <div id="result-area">
+            <div id="status-badge" class="status-badge">VALID</div>
+            
+            <div id="info-container">
+                <div class="info-row"><span class="info-label">Phim:</span><span class="info-val" id="res-movie">...</span></div>
+                <div class="info-row"><span class="info-label">Rạp:</span><span class="info-val" id="res-cinema">...</span></div>
+                <div class="info-row"><span class="info-label">Ghế:</span><span class="info-val" id="res-seats">...</span></div>
+            </div>
+            
+            <button id="btn-checkin" class="btn" onclick="confirmCheckIn()">XÁC NHẬN VÀO CỔNG</button>
+            <button id="btn-print" class="btn" onclick="window.print()">🖨️ IN VÉ VẬT LÝ</button>
+        </div>
+    </div>
+
+    <div id="printable-container"></div>
+
+    <script>
+        const API_IDENTITY = "http://localhost:8003";
+        const API_REDEMPTION = "http://localhost:8006";
+
+        checkAuth();
+
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function checkAuth() {
+            const token = sessionStorage.getItem("staff_token");
+            if (token) {
+                const payload = parseJwt(token);
+                if (payload && (payload.role === 'TICKET_CHECKER' || payload.role === 'ADMIN')) {
+                    showScannerUI();
+                } else {
+                    staffLogout(); 
+                }
+            } else {
+                showLoginUI();
+            }
+        }
+
+        async function staffLogin() {
+            const email = document.getElementById("staff-email").value;
+            const password = document.getElementById("staff-password").value;
+
+            if (!email || !password) return alert("Vui lòng nhập đầy đủ thông tin!");
+
+            try {
+                const res = await fetch(`${API_IDENTITY}/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await res.json();
+                
+                if (res.ok) {
+                    const token = data.access_token;
+                    const payload = parseJwt(token);
+
+                    if (payload.role === 'TICKET_CHECKER' || payload.role === 'ADMIN' || payload.role === 'MANAGER') {
+                        sessionStorage.setItem("staff_token", token);
+                        alert("Đăng nhập thành công!");
+                        showScannerUI();
+                    } else {
+                        alert("LỖI: Tài khoản này không có quyền truy cập Scanner!");
+                    }
+                } else {
+                    alert("Đăng nhập thất bại: " + data.detail);
+                }
+            } catch (err) {
+                alert("Lỗi kết nối Server: " + err);
+            }
+        }
+
+        function staffLogout() {
+            sessionStorage.removeItem("staff_token");
+            location.reload(); 
+        }
+
+        function showLoginUI() {
+            document.getElementById("login-ui").style.display = "block";
+            document.getElementById("scanner-ui").style.display = "none";
+        }
+
+        function showScannerUI() {
+            document.getElementById("login-ui").style.display = "none";
+            document.getElementById("scanner-ui").style.display = "block";
+        }
+
+        // --- LOGIC SCANNER ---
+        async function checkTicket() {
+            const id = document.getElementById("booking-id").value;
+            if (!id) return alert("Vui lòng nhập ID vé!");
+
+            try {
+                const res = await fetch(`${API_REDEMPTION}/validate/${id}`);
+                const data = await res.json();
+
+                const resultArea = document.getElementById("result-area");
+                const infoContainer = document.getElementById("info-container");
+                const badge = document.getElementById("status-badge");
+                const btnCheckin = document.getElementById("btn-checkin");
+                const btnPrint = document.getElementById("btn-print");
+
+                resultArea.style.display = "block";
+
+                if (data.status === "VALID" || data.status === "USED") {
+                    infoContainer.style.display = "block";
+                    document.getElementById("res-movie").innerText = data.ticket_data.movie;
+                    document.getElementById("res-cinema").innerText = data.ticket_data.cinema;
+                    document.getElementById("res-seats").innerText = data.ticket_data.seats;
+
+                    const container = document.getElementById("printable-container");
+                    container.innerHTML = "";
+                    const seatList = data.ticket_data.seats.split(", ");
+                    const unitPrice = data.ticket_data.price / seatList.length;
+
+                    seatList.forEach((seat, index) => {
+                        const ticketHTML = `
+                            <div class="single-ticket">
+                                <div class="ticket-logo">CINEWORLD TICKET</div>
+                                <div class="ticket-row"><span>Rạp:</span><span>${data.ticket_data.cinema}</span></div>
+                                <div class="ticket-row"><span>Phòng:</span><span>${data.ticket_data.screen}</span></div>
+                                <div class="ticket-divider"></div>
+                                <div style="font-weight:bold; font-size:14px; margin-bottom:5px">${data.ticket_data.movie}</div>
+                                <div class="ticket-row"><span>Suất:</span><span>${data.ticket_data.time}</span></div>
+                                <div class="ticket-divider"></div>
+                                <div style="text-align:center">GHẾ</div>
+                                <div class="ticket-seat-large">${seat}</div>
+                                <div class="ticket-divider"></div>
+                                <div class="ticket-row"><span>Giá vé:</span><span>${unitPrice.toLocaleString()} VND</span></div>
+                                <div class="ticket-row"><span>Mã đơn:</span><span>#${data.ticket_data.booking_id}</span></div>
+                                <div class="ticket-footer">Vé ${index + 1}/${seatList.length} - Vui lòng giữ vé để kiểm soát.<br>Cảm ơn quý khách!</div>
+                            </div>
+                            <div class="page-break"></div>
+                        `;
+                        container.innerHTML += ticketHTML;
+                    });
+
+                    btnPrint.style.display = "block"; 
+                    
+                    if(data.status === "VALID") {
+                        badge.className = "status-badge status-valid";
+                        badge.innerText = "HỢP LỆ - CHO PHÉP VÀO";
+                        btnCheckin.style.display = "block";
+                    } else {
+                        badge.className = "status-badge status-used";
+                        badge.innerText = "CẢNH BÁO: VÉ ĐÃ DÙNG";
+                        btnCheckin.style.display = "none";
+                    }
+                } else {
+                    badge.className = "status-badge status-invalid";
+                    badge.innerText = "MÃ VÉ KHÔNG TỒN TẠI HOẶC CHƯA THANH TOÁN";
+                    infoContainer.style.display = "none";
+                    btnCheckin.style.display = "none";
+                    btnPrint.style.display = "none";
+                }
+            } catch (err) { alert("Lỗi kết nối!"); console.error(err); }
+        }
+
+        async function confirmCheckIn() {
+            const id = document.getElementById("booking-id").value;
+            if(!confirm("Xác nhận cho khách vào rạp?")) return;
+            await fetch(`${API_REDEMPTION}/checkin/${id}`, { method: "POST" });
+            alert("✅ Check-in thành công!");
+            checkTicket(); 
+        }
+    </script>
+</body>
+</html>

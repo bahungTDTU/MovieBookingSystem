@@ -1,0 +1,177 @@
+version: '3.8'
+
+# =============================================================================
+# Phase 3 – Production Docker Compose
+# =============================================================================
+# Pulls pre-built images from Docker Hub. No local builds.
+#
+# Usage:
+#   docker compose -f docker-compose.prod.yml --env-file .env up -d
+#
+# Replace "your-dockerhub-username" with your Docker Hub account name.
+# =============================================================================
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # Database
+  # ---------------------------------------------------------------------------
+  db:
+    image: mysql:8.0
+    container_name: cineworld_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost",
+             "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - cineworld_network
+
+  # ---------------------------------------------------------------------------
+  # Microservices
+  # ---------------------------------------------------------------------------
+  catalog_service:
+    image: ${DOCKERHUB_USERNAME}/cineworld-catalog:latest
+    container_name: cineworld_catalog
+    restart: always
+    env_file: .env
+    ports:
+      - "8001:8001"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cineworld_network
+
+  otp_service:
+    image: ${DOCKERHUB_USERNAME}/cineworld-otp:latest
+    container_name: cineworld_otp
+    restart: always
+    env_file: .env
+    ports:
+      - "8002:8002"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cineworld_network
+
+  identity_service:
+    image: ${DOCKERHUB_USERNAME}/cineworld-identity:latest
+    container_name: cineworld_identity
+    restart: always
+    env_file: .env
+    ports:
+      - "8003:8003"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cineworld_network
+
+  booking_service:
+    image: ${DOCKERHUB_USERNAME}/cineworld-booking:latest
+    container_name: cineworld_booking
+    restart: always
+    env_file: .env
+    ports:
+      - "8004:8004"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cineworld_network
+
+  payment_service:
+    image: ${DOCKERHUB_USERNAME}/cineworld-payment:latest
+    container_name: cineworld_payment
+    restart: always
+    env_file: .env
+    ports:
+      - "8005:8005"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cineworld_network
+
+  redemption_service:
+    image: ${DOCKERHUB_USERNAME}/cineworld-redemption:latest
+    container_name: cineworld_redemption
+    restart: always
+    env_file: .env
+    ports:
+      - "8006:8006"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cineworld_network
+
+  management_service:
+    image: ${DOCKERHUB_USERNAME}/cineworld-management:latest
+    container_name: cineworld_management
+    restart: always
+    env_file: .env
+    ports:
+      - "8007:8007"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cineworld_network
+
+  scheduler_service:
+    image: ${DOCKERHUB_USERNAME}/cineworld-scheduler:latest
+    container_name: cineworld_scheduler
+    restart: always
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cineworld_network
+
+  # ---------------------------------------------------------------------------
+  # Frontend (Nginx static file server)
+  # ---------------------------------------------------------------------------
+  frontend:
+    image: ${DOCKERHUB_USERNAME}/cineworld-frontend:latest
+    container_name: cineworld_frontend
+    restart: always
+    ports:
+      - "3000:80"
+    volumes:
+      - uploads_data:/usr/share/nginx/html/uploads
+    networks:
+      - cineworld_network
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  mysql_data:
+    driver: local
+    # Persists MySQL data across container restarts and Docker daemon restarts
+  uploads_data:
+    driver: local
+    # Persists uploaded files (movie posters, etc.) across container restarts
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  cineworld_network:
+    driver: bridge
+    # Internal network isolating CineWorld services from other containers

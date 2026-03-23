@@ -1,0 +1,19 @@
+[Unit]
+Description=CineWorld Catalog Service
+After=network.target mysql.service
+Wants=mysql.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/cineworld/services/catalog
+EnvironmentFile=/opt/cineworld/config/.env
+ExecStart=/opt/cineworld/services/catalog/venv/bin/uvicorn main:app --host 127.0.0.1 --port 8001
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=cineworld-catalog
+
+[Install]
+WantedBy=multi-user.target

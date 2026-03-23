@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Chọn Suất Chiếu & Ghế</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* CSS cho phần chọn Rạp & Giờ */
+        .selection-card {
+            background: var(--bg-surface);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-align: center;
+        }
+        .selection-card:hover { border-color: var(--accent); background: #2A2A3C; }
+        .selection-card.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: bold; }
+        
+        .grid-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        
+        /* Ẩn hiện các bước */
+        .step-container { display: none; animation: fadeIn 0.5s; }
+        .step-container.active { display: block; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Movie Detail Modal */
+        .movie-detail-section {
+            display: flex;
+            gap: 30px;
+            background: var(--bg-surface);
+            padding: 30px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 30px;
+            border: 1px solid #333;
+        }
+        .movie-poster { width: 200px; border-radius: 10px; }
+        .movie-info-detail { flex: 1; }
+        .movie-info-detail h1 { margin: 0 0 10px 0; color: var(--accent); }
+        .info-row { display: flex; margin-bottom: 8px; font-size: 14px; }
+        .info-label { width: 100px; color: #888; }
+        .info-value { color: #fff; flex: 1; }
+        .age-badge { 
+            display: inline-block; 
+            padding: 3px 8px; 
+            border-radius: 4px; 
+            font-size: 12px; 
+            font-weight: bold;
+        }
+        .age-P { background: #2ED573; color: #000; }
+        .age-T13 { background: #FFA502; color: #000; }
+        .age-T16 { background: #FF6B6B; color: #fff; }
+        .age-T18 { background: #FF4757; color: #fff; }
+        .movie-description { color: #aaa; font-size: 14px; line-height: 1.6; margin-top: 15px; }
+        
+        /* Screen type badge */
+        .screen-type-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        .screen-type-2D { background: #666; color: #fff; }
+        .screen-type-3D { background: #3498db; color: #fff; }
+        .screen-type-IMAX { background: #9b59b6; color: #fff; }
+        .screen-type-4DX { background: #e74c3c; color: #fff; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container nav-content">
+            <a href="index.html" class="logo">CINE<span style="color:white">WORLD</span>.</a>
+        </div>
+    </nav>
+
+    <div class="container" style="margin-top: 40px;">
+        <!-- Movie Detail Section -->
+        <div id="movie-detail-section" class="movie-detail-section">
+            <img id="movie-poster" class="movie-poster" src="" alt="Poster">
+            <div class="movie-info-detail">
+                <h1 id="movie-title">Đang tải...</h1>
+                <div id="movie-meta-detail">
+                    <div class="info-row"><span class="info-label">Đạo diễn:</span><span id="movie-director" class="info-value">--</span></div>
+                    <div class="info-row"><span class="info-label">Diễn viên:</span><span id="movie-actors" class="info-value">--</span></div>
+                    <div class="info-row"><span class="info-label">Thể loại:</span><span id="movie-genre" class="info-value">--</span></div>
+                    <div class="info-row"><span class="info-label">Khởi chiếu:</span><span id="movie-release" class="info-value">--</span></div>
+                    <div class="info-row"><span class="info-label">Thời lượng:</span><span id="movie-duration" class="info-value">--</span></div>
+                    <div class="info-row"><span class="info-label">Ngôn ngữ:</span><span id="movie-language" class="info-value">--</span></div>
+                    <div class="info-row"><span class="info-label">Độ tuổi:</span><span id="movie-age" class="info-value age-badge">--</span></div>
+                </div>
+                <p id="movie-description" class="movie-description"></p>
+            </div>
+        </div>
+        
+        <div class="booking-header">
+            <p style="color: var(--text-sub);">
+                <span id="cinema-name">Chọn rạp</span> • 
+                <span id="date-display">--/--</span> • 
+                <span id="showtime-display">--:--</span>
+                <span id="screen-type-display"></span>
+            </p>
+        </div>
+
+        <div id="step-1" class="step-container active">
+            
+            <h3 style="border-left: 4px solid var(--accent); padding-left: 15px; margin-bottom: 20px;">1. Chọn Rạp Chiếu</h3>
+            <div id="cinema-list" class="grid-list">
+                <p>Đang tải rạp...</p>
+            </div>
+
+            <div id="date-section" style="display: none;">
+                <h3 style="border-left: 4px solid var(--accent); padding-left: 15px; margin-bottom: 20px;">2. Chọn Ngày Chiếu</h3>
+                <div id="date-list" class="grid-list"></div>
+            </div>
+
+            <div id="time-section" style="display: none;">
+                <h3 style="border-left: 4px solid var(--accent); padding-left: 15px; margin-bottom: 20px;">3. Chọn Khung Giờ</h3>
+                <div id="showtime-list" class="grid-list"></div>
+            </div>
+        </div>
+
+        <div id="step-2" class="step-container">
+            <button class="btn btn-outline" onclick="backToStep1()" style="margin-bottom: 20px;">← Quay lại chọn lịch</button>
+            
+            <div style="background: #1a1a2e; padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid var(--accent);">
+                <p style="margin: 0; color: #888; font-size: 13px;">
+                    <b style="color: var(--accent);">Lưu ý khi đặt ghế:</b><br>
+                    • Tối đa 8 ghế / lần đặt<br>
+                    • Chỉ được chọn một loại ghế (Standard / VIP / Couple)<br>
+                    • Không được để trống 1 ghế giữa các ghế đã chọn
+                </p>
+            </div>
+            
+            <div class="screen-container">
+                <div class="screen"></div>
+                <div class="seat-grid" id="seat-map"></div>
+                <div class="legend">
+                    <div class="legend-item"><span style="background:#3A3A50"></span>Standard</div>
+                    <div class="legend-item"><span class="vip" style="width:15px;height:15px;display:inline-block;margin-right:5px"></span>VIP</div>
+                    <div class="legend-item"><span class="couple" style="width:15px;height:15px;display:inline-block;margin-right:5px"></span>Couple</div>
+                    <div class="legend-item"><span style="background:var(--accent)"></span>Đang chọn</div>
+                    <div class="legend-item"><span style="background:#444; opacity:0.5"></span>Đã bán</div>
+                </div>
+            </div>
+
+            <div style="background: var(--bg-surface); padding: 30px; border-radius: var(--radius-lg); margin-top: 40px;">
+                <h3 style="border-left: 4px solid var(--accent); padding-left: 15px; margin-bottom: 20px;">Combo Bắp Nước</h3>
+                <div id="concession-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px;"></div>
+            </div>
+
+            <div style="height: 100px;"></div> 
+            <div style="position: fixed; bottom: 0; left: 0; width: 100%; background: #181818; border-top: 1px solid #333; padding: 20px 0; z-index: 100;">
+                <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <p style="color: var(--text-sub); font-size: 14px; margin: 0;">Ghế: <span id="count" style="color: white; font-weight: bold;">0</span> / 8</p>
+                        <p style="margin: 0; font-size: 20px;">Tổng: <span id="total" style="color: var(--accent); font-weight: bold;">0</span> VND</p>
+                    </div>
+                    <button class="btn" onclick="bookAndPay()" style="padding: 15px 40px; font-size: 16px;">THANH TOÁN NGAY</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

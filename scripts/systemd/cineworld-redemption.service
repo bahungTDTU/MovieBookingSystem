@@ -1,0 +1,19 @@
+[Unit]
+Description=CineWorld Redemption Service
+After=network.target mysql.service
+Wants=mysql.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/cineworld/services/redemption
+EnvironmentFile=/opt/cineworld/config/.env
+ExecStart=/opt/cineworld/services/redemption/venv/bin/uvicorn main:app --host 127.0.0.1 --port 8006
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=cineworld-redemption
+
+[Install]
+WantedBy=multi-user.target

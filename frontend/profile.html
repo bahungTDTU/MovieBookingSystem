@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hồ sơ - CineWorld</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .profile-wrapper {
+            max-width: 600px;
+            margin: 40px auto 60px;
+        }
+
+        .profile-card {
+            background: var(--bg-surface);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            border: 1px solid #333;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        }
+
+        .avatar-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .avatar-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 15px;
+            cursor: pointer;
+        }
+
+        .avatar-img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--accent);
+            transition: 0.3s;
+        }
+
+        .avatar-overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: 0.3s;
+        }
+
+        .avatar-container:hover .avatar-overlay {
+            opacity: 1;
+        }
+
+        .avatar-overlay i {
+            color: white;
+            font-size: 24px;
+        }
+
+        .profile-name {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 10px 0 5px;
+        }
+
+        .profile-role {
+            background: var(--accent);
+            color: #000;
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        .info-section {
+            margin-top: 25px;
+            border-top: 1px solid #333;
+            padding-top: 25px;
+        }
+
+        .info-row {
+            display: flex;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .info-row:last-child { border-bottom: none; }
+
+        .info-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: rgba(255,193,7,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: var(--text-sub);
+            margin-bottom: 2px;
+        }
+
+        .info-value {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .action-buttons {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            border-radius: var(--radius-sm);
+            border: 1px solid #333;
+            background: transparent;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 15px;
+            text-decoration: none;
+        }
+
+        .action-btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--accent);
+        }
+
+        .action-btn i {
+            width: 20px;
+            text-align: center;
+            color: var(--accent);
+        }
+
+        .action-btn.danger { border-color: rgba(255,71,87,0.3); }
+        .action-btn.danger:hover { background: rgba(255,71,87,0.1); border-color: var(--danger); }
+        .action-btn.danger i { color: var(--danger); }
+
+        /* Change Password Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal-box {
+            background: var(--bg-surface);
+            border-radius: var(--radius-lg);
+            padding: 35px;
+            width: 90%;
+            max-width: 420px;
+            border: 1px solid #333;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .modal-box h3 {
+            margin: 0 0 25px;
+            font-size: 20px;
+            text-align: center;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .modal-actions .btn { flex: 1; }
+
+        .btn-cancel {
+            background: transparent;
+            border: 1px solid #555;
+            color: var(--text-sub);
+            font-weight: 700;
+            padding: 12px 24px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 14px;
+            flex: 1;
+            text-align: center;
+        }
+
+        .btn-cancel:hover { border-color: #999; color: white; }
+
+        .upload-progress {
+            display: none;
+            text-align: center;
+            margin-top: 10px;
+            color: var(--accent);
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="container nav-content">
+            <a href="index.html" class="logo">CINE<span style="color:white">WORLD</span>.</a>
+            <div id="user-info"></div>
+        </div>
+    </nav>
+
+    <div class="container profile-wrapper">
+        <div class="profile-card">
+            <!-- Avatar -->
+            <div class="avatar-section">
+                <div class="avatar-container" onclick="document.getElementById('avatar-input').click()" title="Nhấn để thay đổi ảnh đại diện">
+                    <img id="profile-avatar" class="avatar-img" src="https://ui-avatars.com/api/?name=U&background=FFC107&color=000&size=120" alt="Avatar">
+                    <div class="avatar-overlay">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                </div>
+                <input type="file" id="avatar-input" accept="image/*" style="display:none" onchange="uploadAvatar(this)">
+                <div class="upload-progress" id="upload-progress">
+                    <i class="fas fa-spinner fa-spin"></i> Đang tải lên...
+                </div>
+                <h2 class="profile-name" id="profile-name">Đang tải...</h2>
+                <span class="profile-role" id="profile-role">MEMBER</span>
+            </div>
+
+            <!-- Info -->
+            <div class="info-section">
+                <div class="info-row">
+                    <div class="info-icon"><i class="fas fa-envelope"></i></div>
+                    <div>
+                        <div class="info-label">EMAIL</div>
+                        <div class="info-value" id="profile-email">---</div>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-icon"><i class="fas fa-user"></i></div>
+                    <div>
+                        <div class="info-label">HỌ VÀ TÊN</div>
+                        <div class="info-value" id="profile-fullname">---</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="action-buttons">
+                <a href="history.html" class="action-btn">
+                    <i class="fas fa-ticket-alt"></i>
+                    <span>Lịch sử đặt vé</span>
+                </a>
+                <button class="action-btn" onclick="openChangePasswordModal()">
+                    <i class="fas fa-lock"></i>
+                    <span>Đổi mật khẩu</span>
+                </button>
+                <button class="action-btn danger" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Đăng xuất</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div class="modal-overlay" id="password-modal">
+        <div class="modal-box">
+            <h3><i class="fas fa-lock" style="color:var(--accent); margin-right:8px;"></i>Đổi mật khẩu</h3>
+            <div class="form-group">
+                <label style="font-size:12px; color:var(--text-sub); margin-bottom:5px; display:block;">MẬT KHẨU HIỆN TẠI</label>
+                <input type="password" id="old-password" placeholder="Nhập mật khẩu hiện tại">
+            </div>
+            <div class="form-group">
+                <label style="font-size:12px; color:var(--text-sub); margin-bottom:5px; display:block;">MẬT KHẨU MỚI</label>
+                <input type="password" id="new-password" placeholder="Nhập mật khẩu mới">
+            </div>
+            <div class="form-group">
+                <label style="font-size:12px; color:var(--text-sub); margin-bottom:5px; display:block;">XÁC NHẬN MẬT KHẨU MỚI</label>
+                <input type="password" id="confirm-new-password" placeholder="Nhập lại mật khẩu mới">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeChangePasswordModal()">Hủy</button>
+                <button class="btn" onclick="changePassword()">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        loadProfile();
+    </script>
+</body>
+</html>
