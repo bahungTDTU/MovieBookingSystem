@@ -4,3 +4,4 @@ sqlalchemy==2.0.25
 pymysql==1.1.0
 httpx==0.26.0
 python-jose==3.3.0  # Để decode token lấy user_id
+cryptography==42.0.2
