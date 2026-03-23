@@ -3,7 +3,9 @@ from jose import jwt
 from datetime import datetime, timedelta
 import os
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-this-in-production") 
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("JWT_SECRET_KEY environment variable is required")
 ALGORITHM = "HS256"
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
