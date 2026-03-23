@@ -24,8 +24,8 @@ app.add_middleware(
 
 models.Base.metadata.create_all(bind=engine)
 
-SMTP_EMAIL = os.getenv("SMTP_EMAIL", "bahungacezero@gmail.com")
-SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "blvu uwqz awip nton")
+SMTP_EMAIL = os.getenv("SMTP_EMAIL")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
 

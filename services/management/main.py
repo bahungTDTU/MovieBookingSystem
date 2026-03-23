@@ -9,6 +9,7 @@ from sqlalchemy import func
 from datetime import datetime, timedelta
 from typing import List
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+import os
 
 app = FastAPI(title="Management Service")
 
@@ -23,7 +24,7 @@ app.add_middleware(
 models.Base.metadata.create_all(bind=engine)
 
 # --- SECURITY ---
-SECRET_KEY = "SECRET_KEY_SIEU_BAO_MAT_CUA_BAN"
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-this-in-production")
 ALGORITHM = "HS256"
 
 security = HTTPBearer()

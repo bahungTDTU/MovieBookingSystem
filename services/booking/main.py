@@ -28,7 +28,7 @@ IDENTITY_SERVICE_URL = "http://identity_service:8003"
 OTP_SERVICE_URL = "http://otp_service:8002"
 PAYMENT_SERVICE_URL = "http://payment_service:8005"
 
-SECRET_KEY = "SECRET_KEY_SIEU_BAO_MAT_CUA_BAN"
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-this-in-production")
 ALGORITHM = "HS256"
 security = HTTPBearer()
 

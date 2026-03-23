@@ -1,9 +1,9 @@
 from passlib.context import CryptContext
 from jose import jwt
 from datetime import datetime, timedelta
+import os
 
-
-SECRET_KEY = "SECRET_KEY_SIEU_BAO_MAT_CUA_BAN" 
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-this-in-production") 
 ALGORITHM = "HS256"
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

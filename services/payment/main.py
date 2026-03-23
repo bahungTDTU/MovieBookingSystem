@@ -31,8 +31,8 @@ models.Base.metadata.create_all(bind=engine)
 BOOKING_SERVICE_URL = "http://booking_service:8004"
 
 # Cấu hình SMTP 
-SMTP_EMAIL = os.getenv("SMTP_EMAIL", "bahungacezero@gmail.com")
-SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "blvu uwqz awip nton")
+SMTP_EMAIL = os.getenv("SMTP_EMAIL")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
 
